@@ -7,8 +7,15 @@ services:
       - "3000:3000"
     depends_on:
       - mongo
+    environment:
+      DATABASE_URL: mongodb://root:password@mongo:27017/parking
+      
   mongo:
     image: "mongo:latest"
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
     ports:
       - "27017:27017"
     volumes:
