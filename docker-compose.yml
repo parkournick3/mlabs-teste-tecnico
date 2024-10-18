@@ -4,20 +4,20 @@ services:
   web:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       - mongo
     environment:
-      DATABASE_URL: mongodb://root:password@mongo:27017/parking
-      
+      DATABASE_URL: mongodb://root:password@mongo:27017/parking?authSource=admin
+
   mongo:
-    image: "mongo:latest"
+    image: 'mongo:latest'
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
       - mongo_data:/data/db
 
