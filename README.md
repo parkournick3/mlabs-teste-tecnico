@@ -14,6 +14,8 @@ e alias, subi uma imagem docker pra facilitar o teste pra vocês
 parkournick3/mlabs-teste-tecnico:latest
 ```
 
+por fim, se este teste não for o suficiente, posso fazer com ruby tambem.
+
 ## Funcionalidades
 
 - Registrar entrada de um veículo
