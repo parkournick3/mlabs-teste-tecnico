@@ -1,51 +1,83 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Teste técnico para Mlabs - API para um estacionamento
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Antes de tudo
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Muito obrigado pela oportunidade! fiz o melhor que pude mas estou sempre disposto a aprender mais e melhorar**
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+e alias, subi uma imagem docker pra facilitar o teste pra vocês
 
 ```bash
-$ npm install
+# expoe a porta 3000 e precisa de um DATABASE_URL ( url para um banco mongodb )
+
+# https://hub.docker.com/repository/docker/parkournick3/mlabs-teste-tecnico/general
+
+parkournick3/mlabs-teste-tecnico:latest
 ```
 
-## Compile and run the project
+## Funcionalidades
 
-```bash
-# development
-$ npm run start
+- Registrar entrada de um veículo
+- Registrar saída de um veículo
+- Pagar uma reserva de estacionamento
+- Historico de reservas de estacionamento por placa
 
-# watch mode
-$ npm run start:dev
+## Mudanças que tomei a iniciativa de fazer diferente do que foi orientado no teste
 
-# production mode
-$ npm run start:prod
+### Rotas
+
+Mudei de `/parking` para `/parking-reservation`, me ajudou a entender melhor e a construir o sistema, fiz ele pensando num usuário que ficaria em um guichê registrando a entrada de um veiculo no patio de um estacionamento ( `post /parking-reservation` ), registrando a saida do veiculo ( `patch /parking-reservation/:id/leave` ), registrando o pagamento, consultando o historico de reservas pela placa do veiculo... na minha cabeça faz mais sentido ser um CRUD de **"reservas de estacionamento"**, faz sentido?
+
+### Verbos HTTP
+
+Alterei as rotas com `PUT` para `PATCH`, achei que fazia mais sentido ser `PATCH` já que as rotas alteram apenas alguns campos do `parking-reservation`
+
+### ID
+
+Preferi manter o padrão de `ObjectId` do MongoDB ao invés de seguir um id sequencial.
+
+### Lembrete
+
+Queria ressaltar que não faria nenhuma dessas alterações sem alinhar com o time antes.
+
+## Rotas
+
+### Registrar entrada do veiculo
+
+```
+POST /parking-reservation
+
+{ plate: 'FAA-1234' }
+
 ```
 
-## Run tests
+### Registrar saida do veiculo
+
+```
+PUT /parking-reservation/:id/leave
+```
+
+### Registrar o pagamento
+
+```
+PUT /parking-reservation/:id/pay
+```
+
+### Consultar historico por placa
+
+```
+GET /parking-reservation/:plate
+[
+  { _id: "6713ae1f3315751c59a673f0", time: '25 minutes', paid: true, left: false }
+]
+```
+
+## Como rodar
+
+[Guia de como rodar](INSTALL.md)
+
+## Testes
+
+_lembre-se de rodar o projeto localmente_
 
 ```bash
 # unit tests
@@ -57,29 +89,3 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
