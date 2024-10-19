@@ -5,6 +5,8 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   SerializeOptions,
   UseInterceptors,
@@ -12,6 +14,13 @@ import {
 import { ParkingReservationService } from './parking-reservation.service';
 import { CreateParkingReservationDto } from './dto/create-parking-reservation.dto';
 import { ParkingReservationEntity } from './entities/parking-reservation.entity';
+import {
+  ReservationAlreadyExistsException,
+  ReservationAlreadyLeftException,
+  ReservationAlreadyPaidException,
+  ReservationNotFoundException,
+  ReservationNotPaidException,
+} from './exceptions';
 
 @Controller('parking-reservation')
 export class ParkingReservationController {
@@ -26,22 +35,52 @@ export class ParkingReservationController {
   async create(
     @Body() createParkingReservationDto: CreateParkingReservationDto,
   ) {
-    const existingParkingReservation =
-      await this.parkingReservationService.findOneByPlate(
-        createParkingReservationDto.plate,
+    try {
+      const newParkingReservation = await this.parkingReservationService.create(
+        createParkingReservationDto,
       );
-
-    if (existingParkingReservation) {
-      throw new HttpException(
-        'Parking reservation already exists',
-        HttpStatus.CONFLICT,
-      );
+      return newParkingReservation.toJSON();
+    } catch (error) {
+      if (error instanceof ReservationAlreadyExistsException) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+      throw error;
     }
+  }
 
-    const newParkingReservation = await this.parkingReservationService.create(
-      createParkingReservationDto,
-    );
+  @Patch(':id/pay')
+  async pay(@Param('id') id: string) {
+    try {
+      await this.parkingReservationService.pay(id);
 
-    return newParkingReservation.toJSON();
+      return { message: 'Parking reservation paid' };
+    } catch (error) {
+      if (error instanceof ReservationNotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      if (error instanceof ReservationAlreadyPaidException) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+      throw error;
+    }
+  }
+
+  @Patch(':id/leave')
+  async leave(@Param('id') id: string) {
+    try {
+      await this.parkingReservationService.leave(id);
+      return { message: 'Parking reservation left' };
+    } catch (error) {
+      if (error instanceof ReservationNotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      if (error instanceof ReservationAlreadyLeftException) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+      if (error instanceof ReservationNotPaidException) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+      throw error;
+    }
   }
 }

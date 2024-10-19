@@ -6,6 +6,14 @@ import {
   ParkingReservationSchema,
 } from './schemas/parking-reservation.schema';
 import { imports } from 'test/setup';
+import {
+  ReservationAlreadyExistsException,
+  ReservationAlreadyLeftException,
+  ReservationAlreadyPaidException,
+  ReservationNotFoundException,
+  ReservationNotPaidException,
+} from './exceptions';
+import mongoose from 'mongoose';
 
 describe('ParkingReservationService', () => {
   let service: ParkingReservationService;
@@ -33,21 +41,24 @@ describe('ParkingReservationService', () => {
     expect(result).toHaveProperty('plate', 'aaa-1234');
   });
 
-  it('findOneByPlate', async () => {
-    await service.create({
+  it('findById', async () => {
+    const parkingReservation = await service.create({
       plate: 'aab-1234',
     });
 
-    const result = await service.findOneByPlate('aab-1234');
+    const result = await service.findById(parkingReservation._id.toString());
 
     expect(result).toHaveProperty('_id');
     expect(result).toHaveProperty('plate', 'aab-1234');
   });
 
-  it('findOneByPlate - not found', async () => {
-    const result = await service.findOneByPlate('aac-1234');
-
-    expect(result).toBeNull();
+  it('findById - not found', async () => {
+    try {
+      const generatedId = new mongoose.Types.ObjectId();
+      await service.findById(generatedId.toString());
+    } catch (error) {
+      expect(error).instanceOf(ReservationNotFoundException);
+    }
   });
 
   it('create - duplicate', async () => {
@@ -60,7 +71,7 @@ describe('ParkingReservationService', () => {
         plate: 'aad-1234',
       });
     } catch (error) {
-      expect(error).toHaveProperty('code', 11000);
+      expect(error).instanceOf(ReservationAlreadyExistsException);
     }
   });
 
@@ -72,5 +83,105 @@ describe('ParkingReservationService', () => {
     } catch (error) {
       expect(error).toHaveProperty('errors.plate');
     }
+  });
+
+  it('pay - not found', async () => {
+    try {
+      const generatedId = new mongoose.Types.ObjectId();
+      await service.pay(generatedId.toString());
+    } catch (error) {
+      expect(error).instanceOf(ReservationNotFoundException);
+    }
+  });
+
+  it('leave - not found', async () => {
+    try {
+      const generatedId = new mongoose.Types.ObjectId();
+      await service.leave(generatedId.toString());
+    } catch (error) {
+      expect(error).instanceOf(ReservationNotFoundException);
+    }
+  });
+
+  it('leave - already left', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aae-1234',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    await service.leave(parkingReservation._id.toString());
+
+    try {
+      await service.leave(parkingReservation._id.toString());
+    } catch (error) {
+      expect(error).instanceOf(ReservationAlreadyLeftException);
+    }
+  });
+
+  it('leave - not paid', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aaf-1234',
+    });
+
+    try {
+      await service.leave(parkingReservation._id.toString());
+    } catch (error) {
+      expect(error).instanceOf(ReservationNotPaidException);
+    }
+  });
+
+  it('pay - already paid', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aag-1234',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    try {
+      await service.pay(parkingReservation._id.toString());
+    } catch (error) {
+      expect(error).instanceOf(ReservationAlreadyPaidException);
+    }
+  });
+
+  it('pay', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aah-1234',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    const result = await service.findById(parkingReservation._id.toString());
+
+    expect(result).toHaveProperty('paid', true);
+  });
+
+  it('leave', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aai-1234',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    await service.leave(parkingReservation._id.toString());
+
+    const result = await service.findById(parkingReservation._id.toString());
+
+    expect(result).toHaveProperty('left', true);
+  });
+
+  it('leave - exitTime', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aaj-1234',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    await service.leave(parkingReservation._id.toString());
+
+    const result = await service.findById(parkingReservation._id.toString());
+
+    expect(result).toHaveProperty('exitTime');
   });
 });

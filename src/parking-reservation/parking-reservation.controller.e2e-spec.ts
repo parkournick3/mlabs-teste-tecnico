@@ -6,7 +6,7 @@ import { imports } from 'test/setup';
 describe('ParkingReservationController (e2e)', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports,
     }).compile();
@@ -69,6 +69,93 @@ describe('ParkingReservationController (e2e)', () => {
       .post('/parking-reservation')
       .send({ plate: 'SDW-4324' })
       .expect(201);
+  });
+
+  test('[PATCH] /parking-reservation/:id/pay (404) - not found', async () => {
+    return request(app.getHttpServer())
+      .patch('/parking-reservation/123')
+      .expect(404);
+  });
+
+  test('[PATCH] /parking-reservation/:id/pay (409) - conflict', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1234' })
+      .expect(201);
+
+    const reservationId = createResponse.body._id;
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/pay`)
+      .expect(200);
+
+    return request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/pay`)
+      .expect(409);
+  });
+
+  test('[PATCH] /parking-reservation/:id/pay (200) - valid payment', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1235' })
+      .expect(201);
+
+    const reservationId = createResponse.body._id;
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/pay`)
+      .expect(200);
+  });
+
+  test('[PATCH] /parking-reservation/:id/leave - not paid', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1236' })
+      .expect(201);
+
+    const reservationId = createResponse.body._id;
+
+    return request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/leave`)
+      .expect(409);
+  });
+
+  test('[PATCH] /parking-reservation/:id/leave - already left', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1237' })
+      .expect(201);
+
+    const reservationId = createResponse.body._id;
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/pay`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/leave`)
+      .expect(200);
+
+    return request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/leave`)
+      .expect(409);
+  });
+
+  test('[PATCH] /parking-reservation/:id/leave (200) - valid leave', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1238' })
+      .expect(201);
+
+    const reservationId = createResponse.body._id;
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/pay`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/leave`)
+      .expect(200);
   });
 
   afterAll(async () => {
