@@ -22,8 +22,8 @@ export class ReservationAlreadyPaidException extends Error {
   }
 }
 
-export class ReservationAlreadyExistsException extends Error {
-  constructor(message = 'Parking reservation already exists') {
+export class ReservationAlreadyParkedException extends Error {
+  constructor(message = 'Parking reservation already parked') {
     super(message);
   }
 }

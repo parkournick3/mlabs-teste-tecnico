@@ -7,7 +7,7 @@ export type ParkingReservationDocument = ParkingReservation & Document;
   versionKey: false,
 })
 export class ParkingReservation {
-  @Prop({ required: true, unique: true, match: /^[a-zA-Z]{3}-\d{4}/ })
+  @Prop({ required: true, match: /^[a-zA-Z]{3}-\d{4}/ })
   plate: string;
 
   @Prop({ default: false })

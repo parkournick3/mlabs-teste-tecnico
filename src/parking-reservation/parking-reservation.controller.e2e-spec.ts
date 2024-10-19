@@ -57,18 +57,18 @@ describe('ParkingReservationController (e2e)', () => {
       .expect(201);
   });
 
-  test('[POST] /parking-reservation (409) - conflict', async () => {
-    return request(app.getHttpServer())
-      .post('/parking-reservation')
-      .send({ plate: 'aaa-1234' })
-      .expect(409);
-  });
-
   test('[POST] /parking-reservation (201)', async () => {
     return request(app.getHttpServer())
       .post('/parking-reservation')
       .send({ plate: 'SDW-4324' })
       .expect(201);
+  });
+
+  test('[POST] /parking-reservation (409) - already parked', async () => {
+    return request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'SDW-4324' })
+      .expect(409);
   });
 
   test('[PATCH] /parking-reservation/:id/pay (404) - not found', async () => {
@@ -155,6 +155,38 @@ describe('ParkingReservationController (e2e)', () => {
 
     await request(app.getHttpServer())
       .patch(`/parking-reservation/${reservationId}/leave`)
+      .expect(200);
+  });
+
+  test('[GET] /parking-reservation/:plate (404) - not found', async () => {
+    return request(app.getHttpServer())
+      .get('/parking-reservation/XYZ-1239')
+      .expect(404);
+  });
+
+  test('[GET] /parking-reservation/:plate (200) - found', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1239' })
+      .expect(201);
+
+    const reservationId = createResponse.body._id;
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/pay`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/parking-reservation/${reservationId}/leave`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1239' })
+      .expect(201);
+
+    return request(app.getHttpServer())
+      .get('/parking-reservation/XYZ-1239')
       .expect(200);
   });
 

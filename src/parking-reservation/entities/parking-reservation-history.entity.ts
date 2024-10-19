@@ -1,19 +1,29 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import dayjs from 'dayjs';
 
 export class ParkingReservationHistoryEntity {
+  @Transform(({ value }) => value.toString())
   _id: string;
+
   paid: boolean;
   left: boolean;
 
   @Exclude()
+  plate: string;
+
+  @Exclude({ toPlainOnly: true })
   entryTime: Date;
 
-  @Exclude()
+  @Exclude({ toPlainOnly: true })
   exitTime: Date;
 
   @Expose()
-  get time(): string {
-    return `${(this.exitTime.getTime() - this.entryTime.getTime()) / 60000} minutes`;
+  time(): string {
+    if (!this.exitTime) {
+      return 'still parked';
+    }
+
+    return dayjs.duration(dayjs(this.exitTime).diff(this.entryTime)).humanize();
   }
 
   constructor(partial: Partial<ParkingReservationHistoryEntity>) {

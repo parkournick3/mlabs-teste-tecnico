@@ -7,9 +7,9 @@ import {
 } from './schemas/parking-reservation.schema';
 import { imports } from 'test/setup';
 import {
-  ReservationAlreadyExistsException,
   ReservationAlreadyLeftException,
   ReservationAlreadyPaidException,
+  ReservationAlreadyParkedException,
   ReservationNotFoundException,
   ReservationNotPaidException,
 } from './exceptions';
@@ -38,7 +38,13 @@ describe('ParkingReservationService', () => {
     });
 
     expect(result).toHaveProperty('_id');
-    expect(result).toHaveProperty('plate', 'aaa-1234');
+    expect(result).toHaveProperty('plate', 'AAA-1234');
+  });
+
+  it('create - it is not possible to create another reservation while the car is still parked', async () => {
+    await expect(service.create({ plate: 'aaa-1234' })).rejects.toThrow(
+      ReservationAlreadyParkedException,
+    );
   });
 
   it('findById', async () => {
@@ -49,33 +55,19 @@ describe('ParkingReservationService', () => {
     const result = await service.findById(parkingReservation._id.toString());
 
     expect(result).toHaveProperty('_id');
-    expect(result).toHaveProperty('plate', 'aab-1234');
+    expect(result).toHaveProperty('plate', 'AAB-1234');
   });
 
   it('findById - not found', async () => {
-    try {
-      const generatedId = new mongoose.Types.ObjectId();
-      await service.findById(generatedId.toString());
-    } catch (error) {
-      expect(error).instanceOf(ReservationNotFoundException);
-    }
-  });
+    const generatedId = new mongoose.Types.ObjectId();
 
-  it('create - duplicate', async () => {
-    await service.create({
-      plate: 'aad-1234',
-    });
-
-    try {
-      await service.create({
-        plate: 'aad-1234',
-      });
-    } catch (error) {
-      expect(error).instanceOf(ReservationAlreadyExistsException);
-    }
+    expect(service.findById(generatedId.toString())).rejects.toThrow(
+      ReservationNotFoundException,
+    );
   });
 
   it('create - invalid plate', async () => {
+    await expect(service.create({ plate: '1234' })).rejects.toThrow();
     try {
       await service.create({
         plate: '1234',
@@ -86,21 +78,19 @@ describe('ParkingReservationService', () => {
   });
 
   it('pay - not found', async () => {
-    try {
-      const generatedId = new mongoose.Types.ObjectId();
-      await service.pay(generatedId.toString());
-    } catch (error) {
-      expect(error).instanceOf(ReservationNotFoundException);
-    }
+    const generatedId = new mongoose.Types.ObjectId();
+
+    await expect(service.pay(generatedId.toString())).rejects.toThrow(
+      ReservationNotFoundException,
+    );
   });
 
   it('leave - not found', async () => {
-    try {
-      const generatedId = new mongoose.Types.ObjectId();
-      await service.leave(generatedId.toString());
-    } catch (error) {
-      expect(error).instanceOf(ReservationNotFoundException);
-    }
+    const generatedId = new mongoose.Types.ObjectId();
+
+    await expect(service.leave(generatedId.toString())).rejects.toThrow(
+      ReservationNotFoundException,
+    );
   });
 
   it('leave - already left', async () => {
@@ -112,11 +102,9 @@ describe('ParkingReservationService', () => {
 
     await service.leave(parkingReservation._id.toString());
 
-    try {
-      await service.leave(parkingReservation._id.toString());
-    } catch (error) {
-      expect(error).instanceOf(ReservationAlreadyLeftException);
-    }
+    await expect(
+      service.leave(parkingReservation._id.toString()),
+    ).rejects.toThrow(ReservationAlreadyLeftException);
   });
 
   it('leave - not paid', async () => {
@@ -124,11 +112,9 @@ describe('ParkingReservationService', () => {
       plate: 'aaf-1234',
     });
 
-    try {
-      await service.leave(parkingReservation._id.toString());
-    } catch (error) {
-      expect(error).instanceOf(ReservationNotPaidException);
-    }
+    await expect(
+      service.leave(parkingReservation._id.toString()),
+    ).rejects.toThrow(ReservationNotPaidException);
   });
 
   it('pay - already paid', async () => {
@@ -138,11 +124,9 @@ describe('ParkingReservationService', () => {
 
     await service.pay(parkingReservation._id.toString());
 
-    try {
-      await service.pay(parkingReservation._id.toString());
-    } catch (error) {
-      expect(error).instanceOf(ReservationAlreadyPaidException);
-    }
+    await expect(
+      service.pay(parkingReservation._id.toString()),
+    ).rejects.toThrow(ReservationAlreadyPaidException);
   });
 
   it('pay', async () => {
@@ -183,5 +167,39 @@ describe('ParkingReservationService', () => {
     const result = await service.findById(parkingReservation._id.toString());
 
     expect(result).toHaveProperty('exitTime');
+  });
+
+  it('getHistory', async () => {
+    await service.create({
+      plate: 'aak-1234',
+    });
+
+    const result = await service.getHistory('aak-1234');
+
+    expect(result).toHaveLength(1);
+  });
+
+  it('getHistory - not found', async () => {
+    await expect(service.getHistory('aaz-1234')).rejects.toThrow(
+      ReservationNotFoundException,
+    );
+  });
+
+  it('getHistory - multiple', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aaa-0002',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    await service.leave(parkingReservation._id.toString());
+
+    await service.create({
+      plate: 'aaa-0002',
+    });
+
+    const result = await service.getHistory('aaa-0002');
+
+    expect(result).toHaveLength(2);
   });
 });

@@ -7,9 +7,9 @@ import {
 } from './schemas/parking-reservation.schema';
 import { Model } from 'mongoose';
 import {
-  ReservationAlreadyExistsException,
   ReservationAlreadyLeftException,
   ReservationAlreadyPaidException,
+  ReservationAlreadyParkedException,
   ReservationNotFoundException,
   ReservationNotPaidException,
 } from './exceptions';
@@ -22,14 +22,19 @@ export class ParkingReservationService {
   ) {}
 
   async create(createParkingReservationDto: CreateParkingReservationDto) {
-    const existingParkingReservation =
-      await this.parkingReservationModel.findOne(createParkingReservationDto);
+    const parkingReservations = await this.parkingReservationModel.find({
+      plate: createParkingReservationDto.plate.toUpperCase(),
+    });
 
-    if (existingParkingReservation) {
-      throw new ReservationAlreadyExistsException();
-    }
+    parkingReservations.forEach((parkingReservation) => {
+      if (!parkingReservation.left) {
+        throw new ReservationAlreadyParkedException();
+      }
+    });
 
-    return this.parkingReservationModel.create(createParkingReservationDto);
+    return this.parkingReservationModel.create({
+      plate: createParkingReservationDto.plate.toUpperCase(),
+    });
   }
 
   async findById(id: string) {
@@ -77,5 +82,19 @@ export class ParkingReservationService {
     parkingReservation.paid = true;
 
     await parkingReservation.save();
+  }
+
+  async getHistory(plate: string) {
+    plate = plate.toUpperCase();
+
+    const parkingReservations = await this.parkingReservationModel.find({
+      plate,
+    });
+
+    if (!parkingReservations.length) {
+      throw new ReservationNotFoundException();
+    }
+
+    return parkingReservations;
   }
 }
