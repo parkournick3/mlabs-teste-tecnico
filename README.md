@@ -53,13 +53,13 @@ POST /parking-reservation
 ### Registrar saida do veiculo
 
 ```
-PUT /parking-reservation/:id/leave
+PATCH /parking-reservation/:id/leave
 ```
 
 ### Registrar o pagamento
 
 ```
-PUT /parking-reservation/:id/pay
+PATCH /parking-reservation/:id/pay
 ```
 
 ### Consultar historico por placa
@@ -77,7 +77,7 @@ GET /parking-reservation/:plate
 
 ## Testes
 
-_lembre-se de rodar o projeto localmente_
+_lembre-se de rodar o projeto localmente e um banco mongodb configurado localmente para os testes, crie um arquivo .env a partir do .env.example_
 
 ```bash
 # unit tests
