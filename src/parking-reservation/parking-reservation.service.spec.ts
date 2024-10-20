@@ -144,6 +144,22 @@ describe('ParkingReservationService', () => {
     expect(result.exitTime).toBeInstanceOf(Date);
   });
 
+  it('pay - not found', async () => {
+    const generatedId = new mongoose.Types.ObjectId();
+
+    await expect(service.pay(generatedId.toString())).rejects.toThrow(
+      ReservationNotFoundException,
+    );
+  });
+
+  it('leave - not found', async () => {
+    const generatedId = new mongoose.Types.ObjectId();
+
+    await expect(service.leave(generatedId.toString())).rejects.toThrow(
+      ReservationNotFoundException,
+    );
+  });
+
   it('pay', async () => {
     const parkingReservation = await service.create({
       plate: 'aah-1234',
