@@ -190,6 +190,19 @@ describe('ParkingReservationController (e2e)', () => {
       .expect(200);
   });
 
+  test('[GET] /parking-reservation/:plate (200) - still parked', async () => {
+    await request(app.getHttpServer())
+      .post('/parking-reservation')
+      .send({ plate: 'XYZ-1240' })
+      .expect(201);
+
+    const result = await request(app.getHttpServer())
+      .get('/parking-reservation/XYZ-1240')
+      .expect(200);
+
+    expect(result.body[0]).toHaveProperty('time', 'still parked');
+  });
+
   afterAll(async () => {
     await app.close();
   });
