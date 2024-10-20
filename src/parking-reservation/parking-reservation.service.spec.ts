@@ -129,6 +129,21 @@ describe('ParkingReservationService', () => {
     ).rejects.toThrow(ReservationAlreadyPaidException);
   });
 
+  it('leave fill exit time', async () => {
+    const parkingReservation = await service.create({
+      plate: 'aaa-1244',
+    });
+
+    await service.pay(parkingReservation._id.toString());
+
+    await service.leave(parkingReservation._id.toString());
+
+    const result = await service.findById(parkingReservation._id.toString());
+
+    expect(result).toHaveProperty('exitTime');
+    expect(result.exitTime).toBeInstanceOf(Date);
+  });
+
   it('pay', async () => {
     const parkingReservation = await service.create({
       plate: 'aah-1234',
