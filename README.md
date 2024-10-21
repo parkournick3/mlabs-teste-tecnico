@@ -7,7 +7,7 @@
 e alias, subi uma imagem docker pra facilitar o teste pra vocês
 
 ```bash
-# expoe a porta 3000 e precisa de um DATABASE_URL ( url para um banco mongodb )
+# expoe a porta 3000 ( ou você passa um build arg PORT ) e precisa de um DATABASE_URL ( url para um banco mongodb )
 
 # https://hub.docker.com/repository/docker/parkournick3/mlabs-teste-tecnico/general
 

@@ -1,5 +1,7 @@
 FROM node:23 as build
 
+ARG PORT=3000
+
 WORKDIR /usr/usr/app
 
 COPY package.json package-lock.json ./
@@ -21,6 +23,6 @@ COPY --from=build /usr/usr/app/dist ./dist
 COPY --from=build /usr/usr/app/node_modules ./node_modules
 COPY --from=build /usr/usr/app/package.json ./package.json
 
-EXPOSE 3000
+EXPOSE $PORT
 
 CMD ["npm", "run", "start:prod"]
