@@ -14,6 +14,12 @@ e alias, subi uma imagem docker pra facilitar o teste pra vocês
 parkournick3/mlabs-teste-tecnico:latest
 ```
 
+tambem adicionei o swagger para facilitar a visualização das rotas
+
+```
+http://localhost:3000/api
+```
+
 por fim, se este teste não for o suficiente, posso fazer com ruby tambem.
 
 ## Funcionalidades
