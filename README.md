@@ -1,4 +1,4 @@
-# Teste técnico para Mlabs - API para um estacionamento
+# Teste técnico para mLabs - API para um estacionamento
 
 ## Antes de tudo
 
@@ -21,6 +21,14 @@ http://localhost:3000/api
 ```
 
 por fim, se este teste não for o suficiente, posso fazer com ruby tambem.
+
+## O que foi feito ( espero que conte pontos 😃 ):
+
+- API com NestJS ( Poderia fazer com Ruby on Rails, Fastity ou Express tb )
+- Dockerfile ( 194mb, multistage )
+- Uso de docker compose ( pra facilitar a execução em local )
+- Pipeline CI com Github Actions para executar os testes automatizados antes de fazer o build e push da imagem docker para o Dockerhub
+- Testes automatizados com vitest ( mas poderia fazer com Jest ou com Rspec no Ruby )
 
 ## Funcionalidades
 
